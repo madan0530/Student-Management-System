@@ -1,0 +1,135 @@
+-- ======================================
+-- Student Management System - Full SQL
+-- ======================================
+
+-- Drop tables if they already exist
+DROP TABLE IF EXISTS Grades;
+DROP TABLE IF EXISTS Enrollments;
+DROP TABLE IF EXISTS Advisors;
+DROP TABLE IF EXISTS Courses;
+DROP TABLE IF EXISTS Students;
+
+-- =====================
+-- 1. Create Tables
+-- =====================
+
+-- Students Table
+CREATE TABLE Students (
+    student_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    major TEXT
+);
+
+-- Courses Table
+CREATE TABLE Courses (
+    course_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    course_name TEXT NOT NULL,
+    credits INTEGER NOT NULL
+);
+
+-- Enrollments Table
+CREATE TABLE Enrollments (
+    enrollment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER,
+    course_id INTEGER,
+    semester TEXT,
+    FOREIGN KEY (student_id) REFERENCES Students(student_id),
+    FOREIGN KEY (course_id) REFERENCES Courses(course_id)
+);
+
+-- Grades Table
+CREATE TABLE Grades (
+    grade_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    enrollment_id INTEGER,
+    grade TEXT,
+    FOREIGN KEY (enrollment_id) REFERENCES Enrollments(enrollment_id)
+);
+
+-- Advisors Table
+CREATE TABLE Advisors (
+    advisor_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT,
+    advisee_id INTEGER,
+    notes TEXT,
+    FOREIGN KEY (advisee_id) REFERENCES Students(student_id)
+);
+
+-- ==========================
+-- 2. Insert Sample Data
+-- ==========================
+
+-- Students
+INSERT INTO Students (name, email, major) VALUES
+('Alice Smith', 'alice@example.com', 'Computer Science'),
+('Bob Johnson', 'bob@example.com', 'Mathematics'),
+('Charlie Green', 'charlie@example.com', 'Physics');
+
+-- Courses
+INSERT INTO Courses (course_name, credits) VALUES
+('Database Systems', 3),
+('Algorithms', 4),
+('Linear Algebra', 3);
+
+-- Enrollments
+INSERT INTO Enrollments (student_id, course_id, semester) VALUES
+(1, 1, 'Spring 2025'),
+(2, 2, 'Spring 2025'),
+(3, 3, 'Fall 2025');
+
+-- Grades
+INSERT INTO Grades (enrollment_id, grade) VALUES
+(1, 'A'),
+(2, 'B+'),
+(3, 'A-');
+
+-- Advisors
+INSERT INTO Advisors (name, email, advisee_id, notes) VALUES
+('Dr. Adams', 'adams@univ.edu', 1, 'Discussed internship opportunities.'),
+('Dr. Brown', 'brown@univ.edu', 2, 'Recommended course plan for next semester.'),
+('Dr. Clark', 'clark@univ.edu', 3, 'Reviewed academic standing.');
+
+-- ==========================
+-- 3. Functional Queries
+-- ==========================
+
+-- a. Add New Student
+INSERT INTO Students (name, email, major) 
+VALUES ('Dana White', 'dana@example.com', 'Engineering');
+
+-- b. Register Student for Course
+INSERT INTO Enrollments (student_id, course_id, semester) 
+VALUES (4, 2, 'Spring 2025');
+
+-- c. Record Grade
+INSERT INTO Grades (enrollment_id, grade) 
+VALUES (4, 'B');
+
+-- d. View Student Transcript
+SELECT s.name, c.course_name, e.semester, g.grade
+FROM Grades g
+JOIN Enrollments e ON g.enrollment_id = e.enrollment_id
+JOIN Courses c ON e.course_id = c.course_id
+JOIN Students s ON e.student_id = s.student_id
+WHERE s.student_id = 1;
+
+-- e. Advisor Viewing Their Advisees
+SELECT a.name AS advisor, s.name AS student, s.major, a.notes
+FROM Advisors a
+JOIN Students s ON a.advisee_id = s.student_id
+WHERE a.name = 'Dr. Adams';
+
+-- f. Course Enrollment Statistics
+SELECT c.course_name, COUNT(e.enrollment_id) AS total_enrollments
+FROM Courses c
+LEFT JOIN Enrollments e ON c.course_id = e.course_id
+GROUP BY c.course_id;
+
+-- g. All Grades by Course
+SELECT c.course_name, s.name AS student_name, g.grade
+FROM Grades g
+JOIN Enrollments e ON g.enrollment_id = e.enrollment_id
+JOIN Students s ON e.student_id = s.student_id
+JOIN Courses c ON e.course_id = c.course_id
+ORDER BY c.course_name, s.name;
